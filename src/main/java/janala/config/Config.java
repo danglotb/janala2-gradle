@@ -74,7 +74,8 @@ public class Config {
           properties.getProperty("catg.analysisClass", "janala.logger.DJVM").replace('.', '/');
       solver = properties.getProperty("catg.solverClass", "janala.solvers.YicesSolver2");
       strategy = properties.getProperty("catg.strategyClass", "janala.solvers.DFSStrategy");
-      excludeList = properties.getProperty("catg.excludeList", "").split(",");
+      excludeList = properties.getProperty("catg.excludeList",
+              "janala,gnu/trove,java/util,java/io,java/security,sun/,javax/security,sun/security,sun/reflect,com/apple/java,java/lang,java/sql,java/nio,java/net,java/text,java/beans,dk/brics,").split(",");
       includeList = properties.getProperty("catg.includeList", "catg.CATG").split(",");
       maxStringLength = Integer.parseInt(properties.getProperty("catg.maxStringLength", "30"));
       pathId = Integer.parseInt(properties.getProperty("catg.pathId", "1"));
