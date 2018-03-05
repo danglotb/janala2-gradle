@@ -1379,13 +1379,24 @@ public class ConcolicInterpreter implements IVisitor {
       } else {
         value = currentFrame.pop();
       }
-      ObjectValue ref = (ObjectValue) currentFrame.pop();
+      Value ref = currentFrame.pop();
     try {
-      ref.setField(fi.getFieldId(), value);
+      if (ref instanceof ObjectValue) {
+        ((ObjectValue)ref).setField(fi.getFieldId(), value);
+      } else if (ref instanceof IntValue) {
+        if (value instanceof ObjectValue) {
+          ((ObjectValue) value).setField(fi.getFieldId(), ref);
+        }
+      }
     } catch (Exception e) {
-      final ObjectValue newRef = (ObjectValue)currentFrame.pop();
+//      e.printStackTrace();
+      try {
+        final ObjectValue newRef = (ObjectValue) currentFrame.pop();
         newRef.setField(fi.getFieldId(), value);
-      e.printStackTrace();
+      } catch (Exception e2) {
+        e2.printStackTrace();
+        //throw new RuntimeException(e2);
+      }
     }
     checkAndSetException();
   }
