@@ -65,11 +65,11 @@ public class ConcolicInterpreter implements IVisitor {
     stack.add(currentFrame = new Frame(0));
     this.cnames = cnames;
     objects = new HashMap<Integer, Value>();
-    this.history = history; // 
+    this.history = history; //
     this.coverage = coverage;
     staticInv = new StaticInvocation(config);
     this.config = config;
-  } 
+  }
 
   private void checkAndSetException() {
     if (!(next instanceof SPECIAL) || ((SPECIAL) next).i != 0) {
@@ -82,12 +82,12 @@ public class ConcolicInterpreter implements IVisitor {
     cr.concrete = 0;
     // The false branch does not have the special instruction.
     if (next instanceof SPECIAL) {
-      // See SnoopInstructionMethodAdapter, 
+      // See SnoopInstructionMethodAdapter,
       // 1 corresponds to the true branch.
-      if (((SPECIAL) next).i == 1) { 
+      if (((SPECIAL) next).i == 1) {
         cr.concrete = 1;
       }
-    } 
+    }
   }
 
   private static SymbolicObject getSymbolicObject(final ObjectValue ref) {
@@ -99,10 +99,10 @@ public class ConcolicInterpreter implements IVisitor {
         sref = new SymbolicObject();
         sref.addGuardedObjectValue(null, ref);
       }
-    return sref;    
+    return sref;
   }
 
-  private Value getArrayElementObject(int iid, 
+  private Value getArrayElementObject(int iid,
     final ObjectValue ref, final IntValue i1, final Value val) {
     if (i1.symbolic != null) {
       SymbolicObject tmp = new SymbolicObject();
@@ -130,7 +130,7 @@ public class ConcolicInterpreter implements IVisitor {
     return val;
   }
 
-  private Value getArrayElementInt(int iid, 
+  private Value getArrayElementInt(int iid,
     final ObjectValue ref, final IntValue i1, final Value val) {
     if (i1.symbolic != null) {
       SymbolicOrConstraint or1 = null;
@@ -638,7 +638,7 @@ public class ConcolicInterpreter implements IVisitor {
     try {
       ObjectInfo oi = cnames.get(inst.cIdx);
       FieldInfo fi = oi.get(inst.fIdx, true);
-      
+
       if (inst.desc.startsWith("D") || inst.desc.startsWith("J")) {
         currentFrame.push2(oi.getStaticField(fi.getFieldId()));
       } else {
@@ -1371,7 +1371,6 @@ public class ConcolicInterpreter implements IVisitor {
   }
 
   public void visitPUTFIELD(PUTFIELD inst) {
-    try {
       ObjectInfo oi = cnames.get(inst.cIdx);
       FieldInfo fi = oi.get(inst.fIdx, false);
       Value value;
@@ -1380,10 +1379,24 @@ public class ConcolicInterpreter implements IVisitor {
       } else {
         value = currentFrame.pop();
       }
-      ObjectValue ref = (ObjectValue) currentFrame.pop();
-      ref.setField(fi.getFieldId(), value);
+      Value ref = currentFrame.pop();
+    try {
+      if (ref instanceof ObjectValue) {
+        ((ObjectValue)ref).setField(fi.getFieldId(), value);
+      } else if (ref instanceof IntValue) {
+        if (value instanceof ObjectValue) {
+          ((ObjectValue) value).setField(fi.getFieldId(), ref);
+        }
+      }
     } catch (Exception e) {
-      e.printStackTrace();
+//      e.printStackTrace();
+      try {
+        final ObjectValue newRef = (ObjectValue) currentFrame.pop();
+        newRef.setField(fi.getFieldId(), value);
+      } catch (Exception e2) {
+        e2.printStackTrace();
+        //throw new RuntimeException(e2);
+      }
     }
     checkAndSetException();
   }
